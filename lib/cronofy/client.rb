@@ -12,6 +12,13 @@ module Cronofy
       delete_event
     }.freeze
 
+    # Public: The scope for Enterprise Connect to request if none is
+    # explicitly specified by the caller.
+    DEFAULT_EC_OAUTH_SCOPE = %w{
+      service_account/accounts/manage
+      service_account/resources/manage
+    }.freeze
+
     # Public: Initialize a new Cronofy::Client.
     #
     # options - A Hash of options used to initialize the client (default: {}):
@@ -663,6 +670,30 @@ module Cronofy
     def user_auth_link(redirect_url, options = {})
       options = { scope: DEFAULT_OAUTH_SCOPE }.merge(options)
       @auth.user_auth_link(redirect_url, options)
+    end
+
+    # Public: Generates a URL to send the user to in order to perform the OAuth
+    # 2.0 authorization process.
+    #
+    # redirect_uri - A String specifing the URI to return the user to once they
+    #                have completed the authorization steps.
+    # options      - The Hash options used to refine the selection
+    #                (default: {}):
+    #                :scope - Array or String of scopes describing the privileges
+    #                         you want the Enterprise Connect account to be granted
+    #                         (default: DEFAULT_EC_OAUTH_SCOPE).
+    #                :delegated_scope - Array or String of scopes describing the
+    #                         access to request from the user to the users calendars
+    #                         (default: DEFAULT_OAUTH_SCOPE).
+    #                :state - Array of states to retain during the OAuth
+    #                         authorization process (optional).
+    #
+    # See https://www.cronofy.com/developers/api/#ec-request-auth for reference.
+    #
+    # Returns the URL as a String.
+    def enterprise_connect_auth_link(redirect_url, options = {})
+      options = { scope: DEFAULT_EC_OAUTH_SCOPE, delegated_scope: DEFAULT_OAUTH_SCOPE }.merge(options)
+      @auth.enterprise_connect_auth_link(redirect_url, options)
     end
 
     # Public: Retrieves the OAuth credentials authorized for the given code and

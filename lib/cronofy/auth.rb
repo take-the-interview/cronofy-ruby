@@ -37,7 +37,7 @@ module Cronofy
     # See http://www.cronofy.com/developers/api#authorization for reference.
     #
     # Returns the URL as a String.
-    def user_auth_link(redirect_uri, options = {})
+    def user_auth_link(redirect_uri, options = {}, is_enterprise = false)
       raise ArgumentError.new(":scope is required") unless options[:scope]
 
       params = options.merge(redirect_uri: redirect_uri, response_type: 'code')
@@ -48,6 +48,37 @@ module Cronofy
       if params[:scope].respond_to?(:join)
         params[:scope] = params[:scope].join(' ')
       end
+
+      @auth_client.auth_code.authorize_url(params)
+    end
+
+    # Internal: generate a URL for authorizing the application with Enterprise Connect
+    #
+    # redirect_uri - A String specifing the URI to return the user to once they
+    #                have completed the authorization steps.
+    # options      - The Hash options used to refine the selection
+    #                (default: {}):
+    #                :scope - Array or String of scopes describing the privileges
+    #                         you want the Enterprise Connect account to be granted
+    #                :delegated_scope - Array or String of scopes describing
+    #                         the access to request from the user to the users calendars
+    #                         (required).
+    #                :state - Array of states to retain during the OAuth
+    #                         authorization process (optional).
+    #
+    # See https://www.cronofy.com/developers/api/#ec-request-auth
+    #
+    # Returns the URL as a String.
+    def enterprise_connect_auth_link(redirect_uri, options = {})
+      raise ArgumentError.new(":scope is required") unless options[:scope]
+      raise ArgumentError.new(":delegated_scope is required") unless options[:delegated_scope]
+
+      params = options.merge(redirect_uri: redirect_uri, response_type: 'code')
+
+      params[:scope] = space_out(params[:scope])
+      params[:delegated_scope] = space_out(params[:delegated_scope])
+
+      @auth_client.options[:authorize_url] = "/enterprise_connect/oauth/authorize"
 
       @auth_client.auth_code.authorize_url(params)
     end
@@ -142,6 +173,14 @@ module Cronofy
 
     def blank?(value)
       value.nil? || value.strip.empty?
+    end
+
+    def space_out(scope)
+      if scope.respond_to?(:join)
+        scope.join(' ')
+      else
+        scope
+      end
     end
   end
 end
