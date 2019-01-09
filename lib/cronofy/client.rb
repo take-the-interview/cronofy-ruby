@@ -649,7 +649,7 @@ module Cronofy
         scope: scope,
         callback_url: callback_url
       }
-      params.merge(state: state) unless state.nil?
+      params.merge!(state: state) unless state.nil?
       post("/v1/service_account_authorizations", params)
       nil
     end
